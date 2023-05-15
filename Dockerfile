@@ -6,7 +6,8 @@ RUN DEBIAN_FRONTEND=noninteractive
 
 # Set timezone:
 ENV CONTAINER_TIMEZONE=Asia/Ho_Chi_Minh
-RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone && dpkg-reconfigure -f noninteractive tzdata
+RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone \
+    && apt-get update && apt-get install -y tzdata
 
 # Install dependencies:
 RUN apt-get update && apt-get install -y keyboard-configuration
