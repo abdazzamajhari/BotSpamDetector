@@ -31,4 +31,4 @@ RUN pip install -r requirements.txt --ignore-installed
 
 # Command to run on container start    
 ENTRYPOINT ["python3"]
-CMD ["flask-api.py"]
+CMD ["app.py"]
