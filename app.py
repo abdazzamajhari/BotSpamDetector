@@ -22,20 +22,29 @@ def home():
 
 @app.route('/res', methods=['POST'])
 def result():
-    global tweets_df  # Declare tweets_df as global to modify it within the function
+    global tweets_df, manusia_df  # Declare tweets_df as global to modify it within the function
     if request.method == 'POST':
-        f = request.files['data_file']
-        if not f:
-            return "No file"
+        files = request.files.getlist('data_file')  # Get list of uploaded files
+        if not files:
+            return "No files"
 
-        stream = io.StringIO(f.stream.read().decode("UTF8"), newline=None)
-        csv_input = csv.reader(stream)
-        print(csv_input)
-        for row in csv_input:
-            print(row)
+        combined_data = ""  # Variable to store the combined data from multiple files
 
-        stream.seek(0)
-        result = stream.read()
+        for f in files:
+            if f.filename.endswith('.csv') or f.filename.endswith('.txt'):
+                stream = io.StringIO(f.stream.read().decode("UTF8"), newline=None)
+                csv_input = csv.reader(stream)
+                print(csv_input)
+                for row in csv_input:
+                    print(row)
+
+                stream.seek(0)
+                result = stream.read()
+                combined_data += result
+
+        if not combined_data:
+            return "No valid CSV or TXT files found"
+        
         # load data
         tweets_df = pd.read_csv(StringIO(result), sep="|")
 
@@ -136,7 +145,7 @@ def result():
 
     return render_template('index.html', tweets=manusia_df.values.tolist())
 
-
+# Seluruh klasifikasi data
 @app.route('/download')
 def download_csv():
     global tweets_df  # Declare tweets_df as global to access it within the function
@@ -151,7 +160,25 @@ def download_csv():
     return Response(
         output,
         mimetype="text/csv",
-        headers={"Content-Disposition": "attachment;filename=result.csv"}
+        headers={"Content-Disposition": "attachment;filename=result_all.csv"}
+    )
+
+# Data manusia
+@app.route('/download-human')
+def download_csv_human():
+    global manusia_df  # Declare tweets_df as global to access it within the function
+    if manusia_df is None:
+        return "No data to download"
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter='|')
+    writer.writerow(['tweet', 'username', 'tanggal_tweet', 'klasifikasi'])
+    for row in manusia_df.itertuples(index=False):
+        writer.writerow(row)
+    output.seek(0)
+    return Response(
+        output,
+        mimetype="text/csv",
+        headers={"Content-Disposition": "attachment;filename=result_human.csv"}
     )
 
 if __name__ == "__main__": 

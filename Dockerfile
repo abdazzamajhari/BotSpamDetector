@@ -1,34 +1,48 @@
 # FOR UBUNTU SERVER
 FROM ubuntu:20.04
 
-# FOR RAILWAY
-RUN DEBIAN_FRONTEND=noninteractive
-
 # Set timezone:
-ENV CONTAINER_TIMEZONE=Asia/Ho_Chi_Minh
-RUN ln -snf /usr/share/zoneinfo/$CONTAINER_TIMEZONE /etc/localtime && echo $CONTAINER_TIMEZONE > /etc/timezone \
+ENV TZ=Asia/Ho_Chi_Minh
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone \
     && apt-get update && apt-get install -y tzdata
 
 # Install dependencies:
-RUN apt-get update && apt-get install -y keyboard-configuration
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    keyboard-configuration \
+    sudo \
+    software-properties-common \
+    python3.8 \
+    python3-distutils \
+    python3.8-dev \
+    python3-pip \
+    libssl-dev \
+    libffi-dev \
+    libxml2-dev \
+    libxslt1-dev \
+    zlib1g-dev \
+    fonts-liberation \
+    xdg-utils \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update && apt-get -y install sudo
-RUN sudo apt-get install software-properties-common -y
-RUN sudo apt-get install python3.10 -y
-RUN sudo apt-get install python3-pip -y
+# Upgrade pip and install requirements
+COPY requirements.txt /tmp/
+RUN python3.8 -m pip install --upgrade pip && \
+    python3.8 -m pip install --no-cache-dir -r /tmp/requirements.txt && \
+    rm /tmp/requirements.txt
 
-RUN sudo apt-get install -y fonts-liberation
-RUN sudo apt-get install -y xdg-utils
-
-# Sets the working directory in the container  
+# Copy the rest of the application files
 COPY . /app
 
-# WORKDIR /app
-WORKDIR /app
+# Create a non-root user to run the application
+RUN groupadd -r app && useradd -r -g app appuser && \
+    chown -R appuser:app /app && \
+    chmod 755 /app && \
+    usermod -a -G sudo appuser && \
+    echo 'appuser ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
-RUN pip install --upgrade pip
-RUN pip install -r requirements.txt --ignore-installed
+# Use the non-root user to run the application
+USER appuser
 
 # Command to run on container start    
-ENTRYPOINT ["python3"]
+ENTRYPOINT ["python3.8"]
 CMD ["app.py"]
