@@ -24,26 +24,18 @@ def home():
 def result():
     global tweets_df, manusia_df  # Declare tweets_df as global to modify it within the function
     if request.method == 'POST':
-        files = request.files.getlist('data_file')  # Get list of uploaded files
-        if not files:
-            return "No files"
+        f = request.files['data_file']
+        if not f:
+            return "No file"
 
-        combined_data = ""  # Variable to store the combined data from multiple files
+        stream = io.StringIO(f.stream.read().decode("UTF8"), newline=None)
+        csv_input = csv.reader(stream)
+        print(csv_input)
+        for row in csv_input:
+            print(row)
 
-        for f in files:
-            if f.filename.endswith('.csv') or f.filename.endswith('.txt'):
-                stream = io.StringIO(f.stream.read().decode("UTF8"), newline=None)
-                csv_input = csv.reader(stream)
-                print(csv_input)
-                for row in csv_input:
-                    print(row)
-
-                stream.seek(0)
-                result = stream.read()
-                combined_data += result
-
-        if not combined_data:
-            return "No valid CSV or TXT files found"
+        stream.seek(0)
+        result = stream.read()
         
         # load data
         tweets_df = pd.read_csv(StringIO(result), sep="|")
