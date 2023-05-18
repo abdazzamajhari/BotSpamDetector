@@ -60,7 +60,7 @@
       <p>mesin klasifikasi data robot/spam dan manusia</p>
       <div class="d-flex">
         <form action="{{ url_for('result') }}" method="post" enctype="multipart/form-data">
-          <input type="file" name="data_file" accept=".csv,.txt" multiple>
+          <input type="file" name="data_file">
           <input type="submit" class="btn btn-primary" value="Upload">
         </form>
       </div>      
